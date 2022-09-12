@@ -2,14 +2,17 @@ import React from "react";
 import { RouterConfig } from "./navigation/RouterConfig";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/Toast";
 
 function App() {
   return (
     <>
       <AuthProvider>
-        <BrowserRouter>
-          <RouterConfig />
-        </BrowserRouter>
+        <ToastProvider>
+          <BrowserRouter>
+            <RouterConfig />
+          </BrowserRouter>
+        </ToastProvider>
       </AuthProvider>
     </>
   );

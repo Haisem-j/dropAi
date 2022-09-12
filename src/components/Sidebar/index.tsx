@@ -4,14 +4,21 @@ import {
   DASHBOARD,
   LANDING_PAGE_COPY,
   PRODUCT_DESCRIPTION,
+  PRODUCT_NAME_GENERATOR,
   ROOT,
   SETTINGS,
   SOCIAL_MEDIA_GENERATOR,
 } from "../../navigation/constants";
-import SidebarLinkGroup from "./SidebarLinkGroup";
-import { MdDashboard, MdDescription, MdAnalytics } from "react-icons/md";
+import {
+  MdDashboard,
+  MdDescription,
+  MdAnalytics,
+  MdLogout,
+} from "react-icons/md";
 import { TbSocial } from "react-icons/tb";
 import { IoMdSettings } from "react-icons/io";
+import { BsPencilFill } from "react-icons/bs";
+
 import SidebarLinks from "./SidebarLinks";
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -136,6 +143,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <MdDescription />
               </SidebarLinks>
               <SidebarLinks
+                title="Product Name Generator"
+                path={DASHBOARD + PRODUCT_NAME_GENERATOR}
+              >
+                <BsPencilFill />
+              </SidebarLinks>
+              <SidebarLinks
                 title="Landing Page Generator"
                 path={DASHBOARD + LANDING_PAGE_COPY}
               >
@@ -163,8 +176,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </span>
             </h3>
             <ul className="mt-3">
-              <SidebarLinks title="Settings" path={DASHBOARD + SETTINGS}>
+              <SidebarLinks
+                title="Account Settings"
+                path={DASHBOARD + SETTINGS}
+              >
                 <IoMdSettings />
+              </SidebarLinks>
+              <SidebarLinks title="Logout" path={"Logout"}>
+                <MdLogout />
               </SidebarLinks>
             </ul>
           </div>

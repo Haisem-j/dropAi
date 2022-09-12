@@ -6,10 +6,7 @@ import AuthForm from "../../../components/AuthForm";
 import { AuthContext } from "../../../context/AuthContext";
 import { DASHBOARD } from "../../constants";
 import { signInWithGoogle } from "../../../firebase";
-interface IFormInputs {
-  firstName: string;
-  lastName: string;
-}
+
 const Login = () => {
   const [err, setErr] = React.useState(false);
   const [errorBody, setErrorBody] = React.useState({});
