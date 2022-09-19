@@ -1,25 +1,28 @@
 import React from "react";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
+import { FaTiktok, FaFacebook, FaInstagram } from "react-icons/fa";
 
 import Tooltip from "../../components/Tooltip";
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
-import { generateDescription, generateMoreDescription } from "../../Requests";
+import { generateAd, generateMoreAds } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
-import DescriptionGenerator from "./DescriptionGenerator";
+import AdGenerator from "./AdGenerator";
 
 interface FVals {
   productName: string;
   shortDescription: string;
-  maxLength: string | number;
-  seed?: string;
+  targetAudience: string;
 }
-const ProductDescription = () => {
-  const [descriptions, setDescriptions] = React.useState<string[]>([]);
-  const [descriptionLength, setDescriptionLength] = React.useState(300);
-  const [initialState, setInitialState] = React.useState<FVals | null>(null);
-  const [loading, setLoading] = React.useState(false);
+interface L extends FVals {
+  platform: string;
+}
+const SocialMedia = () => {
   const [showHint, setShowHint] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [ads, setAds] = React.useState<string[]>([]);
+  const [initialState, setInitialState] = React.useState<L | null>(null);
+  const [platformState, setPlatformState] = React.useState("facebook");
 
   const authentication = React.useContext(AuthContext);
 
@@ -28,60 +31,50 @@ const ProductDescription = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-
   const onSubmit: SubmitHandler<FieldValues | FVals> = async ({
     productName,
     shortDescription,
-    maxLength,
-    seed,
+    targetAudience,
   }) => {
-    const reqBody: FVals = {
-      productName: productName,
-      shortDescription: shortDescription
-        .split(" ")
-        .map((i: string) => i.toLowerCase())
-        .join(" "),
-      maxLength: Number(maxLength),
+    const reqBody = {
+      platform: platformState,
+      targetAudience,
+      productName,
+      shortDescription,
     };
-    if (seed) {
-      reqBody["seed"] = seed;
-    }
-
     if (authentication) {
       setLoading(true);
-      const response = await authRequest(
+      const response: { result: string } = await authRequest(
         authentication,
-        generateDescription,
+        generateAd,
         reqBody
       );
-      setDescriptions([response.result]);
+      setAds([response.result]);
       setInitialState({
-        productName: productName,
-        shortDescription: shortDescription
-          .split(" ")
-          .map((i: string) => i.toLowerCase())
-          .join(" "),
-        maxLength: Number(maxLength),
+        productName,
+        targetAudience,
+        shortDescription,
+        platform: platformState,
       });
       setLoading(false);
     }
   };
-
   const loadMore = async () => {
     if (authentication && initialState) {
       setLoading(true);
       const reqBody = {
         productName: initialState.productName,
         shortDescription: initialState.shortDescription,
-        maxLength: initialState.maxLength,
-        previousOutput: descriptions,
+        targetAudience: initialState.targetAudience,
+        previousOutput: ads,
       };
       const response = await authRequest(
         authentication,
-        generateMoreDescription,
+        generateMoreAds,
         reqBody
       );
-      setDescriptions([...descriptions, response.result]);
+      console.log(response.result);
+      setAds([...ads, response.result]);
       setLoading(false);
       setShowHint(true);
     }
@@ -89,31 +82,73 @@ const ProductDescription = () => {
   const handleBanner = (b: boolean) => {
     setShowHint(b);
   };
+
+  const handlePlatform = (platformName: string) => {
+    if (platformName !== platformState) {
+      setPlatformState(platformName);
+    }
+  };
+  const renderTabs = () => {
+    const platforms = [
+      {
+        p: "facebook",
+        icon: <FaFacebook />,
+      },
+      {
+        p: "instagram",
+        icon: <FaInstagram />,
+      },
+      {
+        p: "tiktok",
+        icon: <FaTiktok />,
+      },
+    ];
+    return platforms.map(({ p, icon }) => (
+      <li className="pb-3 mr-6 last:mr-0 first:pl-4 sm:first:pl-6 lg:first:pl-8 last:pr-4 sm:last:pr-6 lg:last:pr-8">
+        <div
+          className={`whitespace-nowrap flex items-center gap-1 cursor-pointer ${
+            platformState === p
+              ? "text-indigo-500"
+              : "text-slate-500 hover:text-slate-600"
+          }`}
+          onClick={() => handlePlatform(p)}
+        >
+          {icon}
+          <span>{p[0].toUpperCase() + p.substring(1)}</span>
+        </div>
+      </li>
+    ));
+  };
+  const clearForm = () => {};
   return (
     <main className="h-full bg-slate-100">
       <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
         <h1 className="text-2xl md:text-3xl text-slate-800 font-bold mb-3">
-          Product Description Generator
+          Social Media Ad Generator
         </h1>
         <div className="mb-3 ">
           {showHint && (
             <WarningBanner hideBanner={handleBanner}>
               Hint! If you are getting the same output repeatedly or are getting
               bad results, change your description by making it more detailed or
-              coming up with a new one. Also add words you would like to see
-              included into seed words!
+              coming up with a new one!
             </WarningBanner>
           )}
         </div>
         <div className="h-full flex gap-10">
-          {/* Form */}
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[475px]"
+            className="w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[450px]"
           >
             <h2 className="text-md font-medium text-center">
               Generator Settings
             </h2>
+
+            <div className="border-b border-slate-200">
+              <ul className="text-sm font-medium flex justify-between flex-nowrap -mx-4 sm:-mx-6 lg:-mx-8 overflow-x-scroll no-scrollbar">
+                {renderTabs()}
+              </ul>
+            </div>
             <div>
               <div className="flex items-center justify-between">
                 <label
@@ -181,7 +216,8 @@ const ProductDescription = () => {
                   className="block text-sm font-medium mb-1"
                   htmlFor="tooltip"
                 >
-                  Seed Words
+                  Target Audience
+                  <span className="text-rose-500 ml-1">*</span>
                 </label>
                 <Tooltip
                   className="ml-2"
@@ -190,53 +226,24 @@ const ProductDescription = () => {
                   position={"right"}
                 >
                   <div className="text-sm text-slate-200">
-                    Include words that are similar to or describes your product.
-                    IE: For a portable blender seed words could be (fast,
-                    healthy, compact).
+                    Include the target audience that you'd wish this the ad
+                    would reach.
                   </div>
                 </Tooltip>
               </div>
               <input
-                {...register("seed")}
-                id="seed"
+                {...register("targetAudience", { required: true })}
+                id="targetAudience"
                 className={`form-input w-full ${
-                  errors["seed"] ? "border-rose-300" : ""
+                  errors["targetAudience"] ? "border-rose-300" : ""
                 }`}
                 type="text"
               />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="tooltip"
-                >
-                  Maximum Length ({descriptionLength})
-                </label>
-                <Tooltip
-                  className="ml-2"
-                  bg="dark"
-                  size="md"
-                  position={"right"}
-                >
-                  <div className="text-sm text-slate-200">
-                    Maximum length of description generated, the longer the
-                    length the more chance of the AI generating nonsense towards
-                    the end
-                  </div>
-                </Tooltip>
-              </div>
-              <input
-                {...register("maxLength")}
-                type="range"
-                name="maxLength"
-                className="w-full h-2 bg-blue-100 appearance-none cursor-pointer"
-                min={1}
-                defaultValue={descriptionLength}
-                max={500}
-                onChange={(e) => setDescriptionLength(Number(e.target.value))}
-              />
+              {errors["targetAudience"] && (
+                <div className="text-xs mt-1 text-rose-500">
+                  This field is required!
+                </div>
+              )}
             </div>
             <button
               className="items-baseline btn bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-none mt-auto"
@@ -258,15 +265,10 @@ const ProductDescription = () => {
               )}
             </button>
           </form>
-          <DescriptionGenerator
-            desc={descriptions}
-            loading={loading}
-            loadMore={loadMore}
-          />
+          <AdGenerator ads={ads} loading={loading} loadMore={loadMore} />
         </div>
       </div>
     </main>
   );
 };
-
-export default ProductDescription;
+export default SocialMedia;

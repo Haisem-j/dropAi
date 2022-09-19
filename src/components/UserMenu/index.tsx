@@ -2,6 +2,7 @@ import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import UserAvatar from "../../images/user-avatar-32.png";
+import { ACCOUNT_PANEL, DASHBOARD } from "../../navigation/constants";
 import Transition from "../../utils/Transition";
 const UserMenu = ({ align }: { align: string }) => {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -67,7 +68,7 @@ const UserMenu = ({ align }: { align: string }) => {
             <li>
               <Link
                 className="font-medium text-sm text-indigo-500 hover:text-indigo-600 flex items-center py-1 px-3"
-                to="/app/settings"
+                to={DASHBOARD + ACCOUNT_PANEL}
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 Settings

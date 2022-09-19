@@ -36,7 +36,7 @@ const SidebarLinks = ({ title, path, children }: SidebarLinksProps) => {
       >
         <div className="flex items-center">
           {children}
-          <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+          <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200 text-slate-200 hover:text-white">
             {title}
           </span>
         </div>

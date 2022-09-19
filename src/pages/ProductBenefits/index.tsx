@@ -1,61 +1,111 @@
 import React from "react";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
-
 import Tooltip from "../../components/Tooltip";
+
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
-import { generateMoreNames, generateNames } from "../../Requests";
+import { generateBenefits, generateMoreBenefits } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
-import NamesGenerated from "./NamesGenerated";
-
-const ProductNameGenerator = () => {
-  const authentication = React.useContext(AuthContext);
-  const [names, setNames] = React.useState<string[]>([]);
-  const [loading, setLoading] = React.useState(false);
-  const [previousState, setPreviousState] = React.useState({});
+import BenefitsGenerator from "./BenefitsGenerator";
+interface FVals {
+  productName: string;
+  shortDescription: string;
+  seed?: string;
+}
+const ProductBenefits = () => {
   const [showHint, setShowHint] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const [benefits, setBenefits] = React.useState<string[]>([]);
+  const [initialState, setInitialState] = React.useState<FVals | null>(null);
+
+  const authentication = React.useContext(AuthContext);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const onSubmit: SubmitHandler<FieldValues> = async (data) => {
+  const onSubmit: SubmitHandler<FieldValues | FVals> = async ({
+    productName,
+    shortDescription,
+    seed,
+  }) => {
+    const reqBody: FVals = {
+      productName: productName,
+      shortDescription: shortDescription
+        .split(" ")
+        .map((i: string) => i.toLowerCase())
+        .join(" "),
+    };
+    if (seed) {
+      reqBody["seed"] = seed;
+    }
     if (authentication) {
-      setPreviousState({ ...data });
       setLoading(true);
-      const response = await authRequest(authentication, generateNames, data);
-      const name = response.result.replace(/(\r\n|\n|\r)/gm, "").split(",");
+      const response: { result: string } = await authRequest(
+        authentication,
+        generateBenefits,
+        reqBody
+      );
+
+      // Format incoming data -> [0] = useless string, [1,n] = has - in front. Remove
+      const formattedOutput: string[] = [];
+      response.result.split("\n").forEach((item, i) => {
+        if (item) {
+          formattedOutput.push(item.substring(1).trim());
+        }
+      });
+      console.log("Output -", response);
+
+      setBenefits([...formattedOutput]);
+      setInitialState({
+        productName: productName,
+        shortDescription: shortDescription
+          .split(" ")
+          .map((i: string) => i.toLowerCase())
+          .join(" "),
+      });
       setLoading(false);
-      setNames([...name]);
     }
   };
   const loadMore = async () => {
-    if (authentication) {
+    if (authentication && initialState) {
       setLoading(true);
-      const data = {
-        pNames: names.join(","),
-        previousState,
+      const reqBody = {
+        productName: initialState.productName,
+        shortDescription: initialState.shortDescription,
+        previousOutput: benefits,
       };
-      const response = await authRequest(
+      const response: { result: string } = await authRequest(
         authentication,
-        generateMoreNames,
-        data
+        generateMoreBenefits,
+        reqBody
       );
-      const name = response.result.replace(/(\r\n|\n|\r)/gm, "").split(",");
-      setNames([...names, ...name]);
-      setShowHint(true);
+      // Format incoming data -> [0] = useless string, [1,n] = has - in front. Remove
+      const formattedOutput: string[] = [];
+      response.result
+        .replace(/(\r\n|\n|\r)/gm, "")
+        .split("-")
+        .forEach((item, i) => {
+          if (item) {
+            formattedOutput.push(item.trim());
+          }
+        });
+      console.log("Output Load More -", response);
+
+      setBenefits([...benefits, ...formattedOutput]);
       setLoading(false);
+      setShowHint(true);
     }
   };
   const handleBanner = (b: boolean) => {
     setShowHint(b);
   };
   return (
-    <main className="h-full bg-slate-100 overflow-hidden">
-      <div className="h-[90%] px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
+    <main className="h-full bg-slate-100">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
         <h1 className="text-2xl md:text-3xl text-slate-800 font-bold mb-3">
-          Product Name Generator
+          Product Benefits Generator
         </h1>
         <div className="mb-3 ">
           {showHint && (
@@ -68,10 +118,9 @@ const ProductNameGenerator = () => {
           )}
         </div>
         <div className="h-full flex gap-10">
-          {/* Form */}
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="max-h-[450px] w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6"
+            className="w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[475px]"
           >
             <h2 className="text-md font-medium text-center">
               Generator Settings
@@ -82,30 +131,19 @@ const ProductNameGenerator = () => {
                   className="block text-sm font-medium mb-1"
                   htmlFor="tooltip"
                 >
-                  Product Description (Up to 60 words)
+                  Product Name (Up to 60 words)
                   <span className="text-rose-500 ml-1">*</span>
                 </label>
-                <Tooltip
-                  className="ml-2"
-                  bg="dark"
-                  size="md"
-                  position={"right"}
-                >
-                  <div className="text-sm text-slate-200">
-                    This will help the AI generate unique names. Remember the
-                    more detail you give the better the name!
-                  </div>
-                </Tooltip>
               </div>
               <input
-                {...register("description", { required: true })}
-                id="description"
+                {...register("productName", { required: true })}
+                id="productName"
                 className={`form-input w-full ${
-                  errors["description"] ? "border-rose-300" : ""
+                  errors["productName"] ? "border-rose-300" : ""
                 }`}
                 type="text"
               />
-              {errors["description"] && (
+              {errors["productName"] && (
                 <div className="text-xs mt-1 text-rose-500">
                   This field is required!
                 </div>
@@ -117,8 +155,44 @@ const ProductNameGenerator = () => {
                   className="block text-sm font-medium mb-1"
                   htmlFor="tooltip"
                 >
-                  Seed Words (Separate each word with a comma)
+                  Short Description
                   <span className="text-rose-500 ml-1">*</span>
+                </label>
+                <Tooltip
+                  className="ml-2"
+                  bg="dark"
+                  size="md"
+                  position={"right"}
+                >
+                  <div className="text-sm text-slate-200">
+                    Include a very short description of what you're product
+                    does. IE: For a portable blender it would be (home milkshake
+                    maker). This will help the AI generate a creative
+                    description.
+                  </div>
+                </Tooltip>
+              </div>
+              <input
+                {...register("shortDescription", { required: true })}
+                id="shortDescription"
+                className={`form-input w-full ${
+                  errors["shortDescription"] ? "border-rose-300" : ""
+                }`}
+                type="text"
+              />
+              {errors["shortDescription"] && (
+                <div className="text-xs mt-1 text-rose-500">
+                  This field is required!
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <label
+                  className="block text-sm font-medium mb-1"
+                  htmlFor="tooltip"
+                >
+                  Words To Include
                 </label>
                 <Tooltip
                   className="ml-2"
@@ -134,55 +208,23 @@ const ProductNameGenerator = () => {
                 </Tooltip>
               </div>
               <input
-                {...register("seed", { required: true })}
+                {...register("seed")}
                 id="seed"
                 className={`form-input w-full ${
                   errors["seed"] ? "border-rose-300" : ""
                 }`}
                 type="text"
               />
-              {errors["seed"] && (
-                <div className="text-xs mt-1 text-rose-500">
-                  This field is required!
-                </div>
-              )}
-            </div>
-            <div>
-              <div className="flex items-center justify-between">
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="tooltip"
-                >
-                  Similar Product Names
-                </label>
-                <Tooltip
-                  className="ml-2"
-                  bg="dark"
-                  size="md"
-                  position={"right"}
-                >
-                  <div className="text-sm text-slate-200">
-                    Include other product names with styles you would like to
-                    emulate (Separate each word with a comma)
-                  </div>
-                </Tooltip>
-              </div>
-              <input
-                {...register("productNames")}
-                id="productNames"
-                className="form-input w-full"
-                type="text"
-              />
             </div>
             <button
-              className="mt-auto items-baseline btn bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-none"
+              className="items-baseline btn bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-none mt-auto"
               type="submit"
               value="Generate"
               disabled={loading}
             >
               {!loading && "Generate"}
               {loading && (
-                <>
+                <div className="flex items-center justify-center">
                   <svg
                     className="animate-spin w-4 h-4 fill-current shrink-0"
                     viewBox="0 0 16 16"
@@ -190,15 +232,19 @@ const ProductNameGenerator = () => {
                     <path d="M8 16a7.928 7.928 0 01-3.428-.77l.857-1.807A6.006 6.006 0 0014 8c0-3.309-2.691-6-6-6a6.006 6.006 0 00-5.422 8.572l-1.806.859A7.929 7.929 0 010 8c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z" />
                   </svg>
                   <span className="ml-2">Loading</span>
-                </>
+                </div>
               )}
             </button>
           </form>
-          <NamesGenerated names={names} loading={loading} loadMore={loadMore} />
+          <BenefitsGenerator
+            benefits={benefits}
+            loading={loading}
+            loadMore={loadMore}
+          />
         </div>
       </div>
     </main>
   );
 };
 
-export default ProductNameGenerator;
+export default ProductBenefits;

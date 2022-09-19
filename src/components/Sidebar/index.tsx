@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
+  ACCOUNT_PANEL,
   DASHBOARD,
-  LANDING_PAGE_COPY,
+  LANDING_DESCRIPTION,
+  LANDING_TAGLINE,
+  PRODUCT_BENEFITS_GENERATOR,
   PRODUCT_DESCRIPTION,
   PRODUCT_NAME_GENERATOR,
   ROOT,
@@ -11,15 +14,15 @@ import {
 } from "../../navigation/constants";
 import {
   MdDashboard,
-  MdDescription,
-  MdAnalytics,
+  MdAccountBalance,
   MdLogout,
+  MdOutlineProductionQuantityLimits,
 } from "react-icons/md";
-import { TbSocial } from "react-icons/tb";
+import { FaFacebookMessenger } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
-import { BsPencilFill } from "react-icons/bs";
 
 import SidebarLinks from "./SidebarLinks";
+import SidebarLinkGroup from "./SidebarLinkGroup";
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -36,6 +39,71 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     storedSidebarExpanded === null ? false : storedSidebarExpanded === "true"
   );
 
+  const handleSidebarLinkGroups = (
+    handleClick: () => void,
+    open: boolean,
+    path: string,
+    subLinks: { link: string; name: string }[],
+    child: React.ReactNode
+  ) => {
+    return (
+      <>
+        <a
+          href="#0"
+          className={`block text-slate-200 hover:text-white truncate transition duration-150 ${
+            pathname.includes(path) && "hover:text-slate-200"
+          }`}
+          onClick={(e) => {
+            e.preventDefault();
+            sidebarExpanded ? handleClick() : setSidebarExpanded(true);
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {/* SVG */}
+              {child}
+              {/* END SVG */}
+              <span className="text-sm font-medium ml-3 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200 text-slate-200 hover:text-white">
+                {/* Capitalized first letter of path */}
+                {path.split("")[0].toLocaleUpperCase() + path.substring(1)}
+              </span>
+            </div>
+            {/* Icon */}
+            <div className="flex shrink-0 ml-2">
+              <svg
+                className={`w-3 h-3 shrink-0 ml-1 fill-current text-slate-400 ${
+                  open && "rotate-180"
+                }`}
+                viewBox="0 0 12 12"
+              >
+                <path d="M5.9 11.4L.5 6l1.4-1.4 4 4 4-4L11.3 6z" />
+              </svg>
+            </div>
+          </div>
+        </a>
+        <div className="lg:hidden lg:sidebar-expanded:block 2xl:block">
+          <ul className={`pl-9 mt-1 ${!open && "hidden"}`}>
+            {subLinks.map(({ link, name }, i) => (
+              <li className="mb-1 last:mb-0" key={`Link - ${name} - ${i}`}>
+                <NavLink
+                  end
+                  to={DASHBOARD + link}
+                  className={({ isActive }) =>
+                    "block text-slate-400 hover:text-slate-200 transition duration-150 truncate " +
+                    (isActive ? "!text-indigo-500" : "")
+                  }
+                >
+                  <span className="text-sm font-medium lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                    {name}
+                  </span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </>
+    );
+  };
   return (
     <div>
       {/* Sidebar backdrop (mobile only) */}
@@ -136,29 +204,62 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <SidebarLinks title="Home" path={DASHBOARD}>
                 <MdDashboard />
               </SidebarLinks>
-              <SidebarLinks
-                title="Product Description"
-                path={DASHBOARD + PRODUCT_DESCRIPTION}
-              >
-                <MdDescription />
-              </SidebarLinks>
-              <SidebarLinks
-                title="Product Name Generator"
-                path={DASHBOARD + PRODUCT_NAME_GENERATOR}
-              >
-                <BsPencilFill />
-              </SidebarLinks>
-              <SidebarLinks
-                title="Landing Page Generator"
-                path={DASHBOARD + LANDING_PAGE_COPY}
-              >
-                <MdAnalytics />
-              </SidebarLinks>
+              {/* PRODUCTS LINKS */}
+              <SidebarLinkGroup activeCondition={pathname.includes("product")}>
+                {(handleClick, open) =>
+                  handleSidebarLinkGroups(
+                    handleClick,
+                    open,
+                    "product",
+                    [
+                      {
+                        link: PRODUCT_DESCRIPTION,
+                        name: "Description Generator",
+                      },
+                      {
+                        link: PRODUCT_BENEFITS_GENERATOR,
+                        name: "Benefits Generator",
+                      },
+                      {
+                        link: PRODUCT_NAME_GENERATOR,
+                        name: "Name Generator",
+                      },
+                    ],
+                    <MdOutlineProductionQuantityLimits />
+                  )
+                }
+              </SidebarLinkGroup>
+              {/* END PRODUCTS LINKS */}
+
+              {/* LANDING LINKS */}
+              <SidebarLinkGroup activeCondition={pathname.includes("landing")}>
+                {(handleClick, open) =>
+                  handleSidebarLinkGroups(
+                    handleClick,
+                    open,
+                    "landing",
+                    [
+                      {
+                        link: LANDING_TAGLINE,
+                        name: "Taglines Generator",
+                      },
+                      {
+                        link: LANDING_DESCRIPTION,
+                        name: "Landing Page Descriptions Generator",
+                      },
+                    ],
+                    <MdAccountBalance />
+                  )
+                }
+              </SidebarLinkGroup>
+
+              {/* END LANDING LINKS */}
+
               <SidebarLinks
                 title="Social Media Ad Generator"
                 path={DASHBOARD + SOCIAL_MEDIA_GENERATOR}
               >
-                <TbSocial />
+                <FaFacebookMessenger />
               </SidebarLinks>
             </ul>
           </div>
@@ -178,7 +279,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             <ul className="mt-3">
               <SidebarLinks
                 title="Account Settings"
-                path={DASHBOARD + SETTINGS}
+                path={DASHBOARD + ACCOUNT_PANEL}
               >
                 <IoMdSettings />
               </SidebarLinks>

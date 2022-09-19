@@ -1,19 +1,19 @@
 /* Range slider */
 :root {
-    --range-thumb-size: 36px;
+  --range-thumb-size: 36px;
 }
 
-input[type=range] {
-    appearance: none;
-    background: #ccc;
-    border-radius: 3px;
-    height: 6px;
-    margin-top: (--range-thumb-size - 6px) * 0.5;
-    margin-bottom: (--range-thumb-size - 6px) * 0.5;
-    --thumb-size: #{--range-thumb-size};  
+input[type="range"] {
+  appearance: none;
+  background: #ccc;
+  border-radius: 3px;
+  height: 6px;
+  margin-top: (--range-thumb-size - 6px) * 0.5;
+  margin-bottom: (--range-thumb-size - 6px) * 0.5;
+  --thumb-size: #{--range-thumb-size};
 }
 
-input[type=range]::-webkit-slider-thumb {
+/* input[type=range]::-webkit-slider-thumb {
     appearance: none;
     -webkit-appearance: none;
     background-color: #000;
@@ -54,4 +54,4 @@ input[type=range]::-ms-thumb {
 
 input[type=range]::-moz-focus-outer {
     border: 0;
-}
+} */

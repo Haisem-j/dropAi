@@ -3,7 +3,7 @@ import Banner from "../../components/Banner";
 import Card from "../../components/Card";
 import {
   DASHBOARD,
-  LANDING_PAGE_COPY,
+  LANDING_TAGLINE,
   PRODUCT_DESCRIPTION,
   SOCIAL_MEDIA_GENERATOR,
 } from "../../navigation/constants";
@@ -25,7 +25,7 @@ const Home = () => {
           <Card
             title="Landing Page Generator"
             subHeader="Generate the text that will be seen on the landing page!"
-            link={DASHBOARD + LANDING_PAGE_COPY}
+            link={DASHBOARD + LANDING_TAGLINE}
           />
           <Card
             title="Social Media Ad Generator"
