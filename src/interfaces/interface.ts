@@ -6,4 +6,5 @@ export interface AuthProps {
   signup: (email: string, password: string) => Promise<firebase.UserCredential>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  verifyEmail: (user: firebase.User) => Promise<void>;
 }

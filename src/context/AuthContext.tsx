@@ -5,6 +5,7 @@ import firebase, {
   signInWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from "firebase/auth";
 import { auth } from "../firebase";
 import { AuthProps } from "../interfaces/interface";
@@ -23,6 +24,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signup = (email: string, password: string) => {
     return createUserWithEmailAndPassword(auth, email, password);
+  };
+  const verifyEmail = (user: firebase.User) => {
+    return sendEmailVerification(user);
   };
   const login = (email: string, password: string) => {
     return signInWithEmailAndPassword(auth, email, password);
@@ -48,6 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signup,
     logout,
     resetPassword,
+    verifyEmail,
   };
 
   return (

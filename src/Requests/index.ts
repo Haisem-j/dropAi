@@ -261,3 +261,44 @@ export const generateMoreTaglines = async (
     return error;
   }
 };
+
+export const checkoutPayment = async (
+  idToken: string,
+  d: { paymentID: string }
+) => {
+  try {
+    const response = await fetch(`${BASE_URL}api/create-checkout-session`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: "Bearer " + idToken,
+      },
+      body: JSON.stringify(d),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
+};
+
+export const createUser = async (idToken: string, d: { uid: string }) => {
+  try {
+    const response = await fetch(`${BASE_URL}api/user/create-user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: "Bearer " + idToken,
+      },
+      body: JSON.stringify(d),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
+};

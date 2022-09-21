@@ -1,14 +1,56 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
+
 import WarningBanner from "../../components/WarningBanner";
+import { AuthContext } from "../../context/AuthContext";
+import { checkoutPayment } from "../../Requests";
+import { authRequest } from "../../utils/authenticationRequest";
+import { STANDARD_MONTHLY } from "../../utils/paymentsIds";
 
 function PlansPanel() {
   const [annual, setAnnual] = useState(false);
-  const [showHint, setShowHint] = React.useState(false);
+  const [paymentFailed, setPaymentFailed] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
+  const authentication = React.useContext(AuthContext);
+  const location = useLocation();
+  React.useEffect(() => {
+    //Check if payment failed
+    if (location.search === "?canceled=true") {
+      setPaymentFailed(true);
+    }
+  }, []);
   const handleBanner = (b: boolean) => {
-    setShowHint(b);
+    setPaymentFailed(b);
+  };
+  const handlePayment = async (paymentId: string) => {
+    setPaymentFailed(false);
+    if (authentication) {
+      try {
+        setLoading(true);
+        const reqBody = {
+          paymentId,
+        };
+        const response = await authRequest(
+          authentication,
+          checkoutPayment,
+          reqBody
+        );
+        setLoading(false);
+        window.location.href = response.url;
+      } catch (error) {
+        console.log(error);
+      }
+    }
   };
   return (
     <main className="min-h-full bg-slate-100 ">
+      <div className="mb-3">
+        {paymentFailed && (
+          <WarningBanner hideBanner={handleBanner}>
+            Payment did not go through!
+          </WarningBanner>
+        )}
+      </div>
       <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
         <div>
           <h1 className="text-2xl md:text-3xl text-slate-800 font-bold text-center">
@@ -18,13 +60,7 @@ function PlansPanel() {
             Generate high quality content for your ecommerce store 🚀
           </h3>
         </div>
-        <div className="mb-3">
-          {showHint && (
-            <WarningBanner hideBanner={handleBanner}>
-              Payment did not go through!
-            </WarningBanner>
-          )}
-        </div>
+
         <div className="flex flex-col items-center">
           <div className="bg-white shadow-lg rounded-sm border border-slate-200 w-2/3 ">
             {/* Panel body */}
@@ -68,8 +104,23 @@ function PlansPanel() {
                         </span>
                       </div>
                       {/* CTA */}
-                      <button className="btn bg-indigo-500 hover:bg-indigo-600 text-white w-full">
-                        Upgrade
+                      <button
+                        className="btn bg-indigo-500 hover:bg-indigo-600 text-white w-full disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                        onClick={() => handlePayment(STANDARD_MONTHLY)}
+                        disabled={loading}
+                      >
+                        {loading && (
+                          <div className="flex items-center justify-center">
+                            <svg
+                              className="animate-spin w-4 h-4 fill-current shrink-0"
+                              viewBox="0 0 16 16"
+                            >
+                              <path d="M8 16a7.928 7.928 0 01-3.428-.77l.857-1.807A6.006 6.006 0 0014 8c0-3.309-2.691-6-6-6a6.006 6.006 0 00-5.422 8.572l-1.806.859A7.929 7.929 0 010 8c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z" />
+                            </svg>
+                            <span className="ml-2">Loading</span>
+                          </div>
+                        )}
+                        {!loading && "Upgrade"}
                       </button>
                     </div>
                     <div className="px-5 pt-4 pb-5">

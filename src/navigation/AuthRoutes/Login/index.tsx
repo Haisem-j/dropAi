@@ -35,7 +35,7 @@ const Login = () => {
     if (authentication?.currentUser) {
       navigate(DASHBOARD);
     }
-  }, []);
+  }, [authentication]);
 
   return (
     <AuthForm>

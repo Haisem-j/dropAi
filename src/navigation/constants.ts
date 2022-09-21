@@ -29,3 +29,6 @@ export const FEEDBACK = "/settings/feedback";
 
 // PlansPanel
 export const PLANS_PANEL = "/plans";
+
+// Checkout
+export const CHECKOUT_SUCCESS = "/checkout-success";

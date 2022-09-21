@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
 const AccountPanel = () => {
@@ -30,8 +31,8 @@ const AccountPanel = () => {
             <span className="mr-3">{authentication?.currentUser?.email}</span>
             <div className="text-sm inline-flex font-medium bg-slate-100 text-slate-500 rounded-full text-center px-2.5 py-1">
               {authentication?.currentUser?.emailVerified
-                ? "UNVERIFIED"
-                : "VERIFIED"}
+                ? "VERIFIED"
+                : "UNVERIFIED"}
             </div>
           </div>
         </section>
@@ -42,13 +43,16 @@ const AccountPanel = () => {
           </h3>
           <div className="text-sm font-light flex items-center">
             <div className="text-sm inline-flex font-medium bg-rose-100 text-rose-600 rounded-full text-center px-2.5 py-1 mr-5">
-              TRIAL
+              Free
             </div>
 
             <div>
-              <button className="btn border-slate-200 shadow-sm bg-indigo-500 hover:bg-indigo-600 text-white">
+              <Link
+                to="/app/plans"
+                className="btn border-slate-200 shadow-sm bg-indigo-500 hover:bg-indigo-600 text-white"
+              >
                 Upgrade
-              </button>
+              </Link>
             </div>
           </div>
         </section>

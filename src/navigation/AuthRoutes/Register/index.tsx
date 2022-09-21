@@ -5,6 +5,8 @@ import AuthForm from "../../../components/AuthForm";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { AuthContext } from "../../../context/AuthContext";
 import { DASHBOARD } from "../../constants";
+import { authRequest } from "../../../utils/authenticationRequest";
+import { createUser } from "../../../Requests";
 
 interface IFormInputs {
   firstName: string;
@@ -28,10 +30,20 @@ const Register = () => {
     try {
       const matches = password.localeCompare(confirmPassword);
       if (matches === -1) throw new Error("confirmPassword");
-      await authentication?.signup(email, password);
+      const userCreds = await authentication?.signup(email, password);
+      // Create user in db
+      if (authentication) {
+        const response: { result: string } = await authRequest(
+          authentication,
+          createUser,
+          { uid: userCreds?.user.uid }
+        );
+        console.log(response);
+      }
+      // if (userCreds) await authentication?.verifyEmail(userCreds?.user);
+
       navigate(DASHBOARD);
     } catch (e: any) {
-      debugger;
       if (e.message === "confirmPassword") {
         setErr({ password: true });
       } else {
@@ -39,6 +51,11 @@ const Register = () => {
       }
     }
   };
+  React.useEffect(() => {
+    if (authentication?.currentUser) {
+      navigate(DASHBOARD);
+    }
+  }, [authentication]);
 
   return (
     <AuthForm>
@@ -137,7 +154,7 @@ const Register = () => {
               </label>
             </div>
             <input
-              className="btn bg-indigo-500 hover:bg-indigo-600 text-white ml-3 whitespace-nowrap"
+              className="btn bg-indigo-500 hover:bg-indigo-600 text-white ml-3 whitespace-nowrap cursor-pointer"
               type="submit"
               value="Sign Up"
             />
