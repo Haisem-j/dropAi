@@ -22,7 +22,7 @@ function SettingsSidebar() {
           <li className="mr-0.5 md:mr-0 md:mb-0.5">
             <NavLink
               end
-              to={DASHBOARD + ACCOUNT_PANEL}
+              to={ACCOUNT_PANEL}
               className={`flex items-center px-2.5 py-2 rounded whitespace-nowrap ${
                 pathname.includes(ACCOUNT_PANEL) && "bg-indigo-50"
               }`}
@@ -57,7 +57,7 @@ function SettingsSidebar() {
           <li className="mr-0.5 md:mr-0 md:mb-0.5">
             <NavLink
               end
-              to={DASHBOARD + BILLING}
+              to={BILLING}
               className={`flex items-center px-2.5 py-2 rounded whitespace-nowrap ${
                 pathname.includes(BILLING) && "bg-indigo-50"
               }`}
@@ -92,7 +92,7 @@ function SettingsSidebar() {
           <li className="mr-0.5 md:mr-0 md:mb-0.5">
             <NavLink
               end
-              to={DASHBOARD + FEEDBACK}
+              to={FEEDBACK}
               className={`flex items-center px-2.5 py-2 rounded whitespace-nowrap ${
                 pathname.includes(FEEDBACK) && "bg-indigo-50"
               }`}

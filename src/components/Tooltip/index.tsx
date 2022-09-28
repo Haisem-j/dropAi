@@ -1,19 +1,26 @@
 import React, { useState } from "react";
 import Transition from "../../utils/Transition";
-
+import { isMobile } from "react-device-detect";
 interface TooltipProps {
   children: React.ReactNode;
   className: string;
   bg: string;
   size: string;
   position: string;
+  icon?: React.ReactNode;
 }
 
 function Tooltip(props: TooltipProps) {
   const [tooltipOpen, setTooltipOpen] = useState(false);
 
   const positionOuterClasses = (position: string) => {
-    switch (position) {
+    let checkPosition;
+    if (position === "right") {
+      checkPosition = "left";
+    } else {
+      checkPosition = position;
+    }
+    switch (checkPosition) {
       case "right":
         return "left-full top-1/2 -translate-y-1/2";
       case "left":
@@ -39,7 +46,14 @@ function Tooltip(props: TooltipProps) {
   };
 
   const positionInnerClasses = (position: string) => {
-    switch (position) {
+    let checkPosition;
+    if (position === "right") {
+      checkPosition = "left";
+    } else {
+      checkPosition = position;
+    }
+
+    switch (checkPosition) {
       case "right":
         return "ml-2";
       case "left":
@@ -65,12 +79,16 @@ function Tooltip(props: TooltipProps) {
         aria-expanded={tooltipOpen}
         onClick={(e) => e.preventDefault()}
       >
-        <svg
-          className="w-4 h-4 fill-current text-slate-400"
-          viewBox="0 0 16 16"
-        >
-          <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" />
-        </svg>
+        {props.icon ? (
+          props.icon
+        ) : (
+          <svg
+            className="w-4 h-4 fill-current text-slate-400"
+            viewBox="0 0 16 16"
+          >
+            <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" />
+          </svg>
+        )}
       </button>
       <div className={`z-10 absolute ${positionOuterClasses(props.position)}`}>
         <Transition

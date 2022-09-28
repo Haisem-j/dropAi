@@ -1,10 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
+import { UserContext } from "../../context/UserContext";
 
 const AccountPanel = () => {
   const authentication = React.useContext(AuthContext);
-  console.log(authentication);
+  const user = React.useContext(UserContext);
 
   return (
     <div className="grow">
@@ -43,7 +44,7 @@ const AccountPanel = () => {
           </h3>
           <div className="text-sm font-light flex items-center">
             <div className="text-sm inline-flex font-medium bg-rose-100 text-rose-600 rounded-full text-center px-2.5 py-1 mr-5">
-              Free
+              {user?.getPlanType()}
             </div>
 
             <div>

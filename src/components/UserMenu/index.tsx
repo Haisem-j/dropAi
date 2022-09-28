@@ -68,7 +68,7 @@ const UserMenu = ({ align }: { align: string }) => {
             <li>
               <Link
                 className="font-medium text-sm text-indigo-500 hover:text-indigo-600 flex items-center py-1 px-3"
-                to={DASHBOARD + ACCOUNT_PANEL}
+                to={ACCOUNT_PANEL}
                 onClick={() => setDropdownOpen(!dropdownOpen)}
               >
                 Settings

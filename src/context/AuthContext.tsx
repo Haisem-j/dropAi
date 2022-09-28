@@ -6,6 +6,8 @@ import firebase, {
   signOut,
   sendPasswordResetEmail,
   sendEmailVerification,
+  signInWithPopup,
+  GoogleAuthProvider,
 } from "firebase/auth";
 import { auth } from "../firebase";
 import { AuthProps } from "../interfaces/interface";
@@ -31,6 +33,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = (email: string, password: string) => {
     return signInWithEmailAndPassword(auth, email, password);
   };
+  const loginWithGoogle = () => {
+    return signInWithPopup(auth, new GoogleAuthProvider());
+  };
   const logout = () => {
     return signOut(auth);
   };
@@ -53,6 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     logout,
     resetPassword,
     verifyEmail,
+    loginWithGoogle,
   };
 
   return (

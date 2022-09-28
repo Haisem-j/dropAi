@@ -1,9 +1,12 @@
 import React from "react";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
+import GeneratorHeader from "../../components/GeneratorHeader";
 
 import Tooltip from "../../components/Tooltip";
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
+import { ToastContext } from "../../context/Toast";
+import { UserContext } from "../../context/UserContext";
 import { generateDescription, generateMoreDescription } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
 import DescriptionGenerator from "./DescriptionGenerator";
@@ -22,6 +25,9 @@ const ProductDescription = () => {
   const [showHint, setShowHint] = React.useState(false);
 
   const authentication = React.useContext(AuthContext);
+  const costOfRequest = 30;
+  const user = React.useContext(UserContext);
+  const toast = React.useContext(ToastContext);
 
   const {
     register,
@@ -35,6 +41,7 @@ const ProductDescription = () => {
     maxLength,
     seed,
   }) => {
+    setLoading(true);
     const reqBody: FVals = {
       productName: productName,
       shortDescription: shortDescription
@@ -46,56 +53,72 @@ const ProductDescription = () => {
     if (seed) {
       reqBody["seed"] = seed;
     }
-
-    if (authentication) {
-      setLoading(true);
-      const response = await authRequest(
-        authentication,
-        generateDescription,
-        reqBody
-      );
-      setDescriptions([response.result]);
-      setInitialState({
-        productName: productName,
-        shortDescription: shortDescription
-          .split(" ")
-          .map((i: string) => i.toLowerCase())
-          .join(" "),
-        maxLength: Number(maxLength),
-      });
-      setLoading(false);
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser) {
+          await user.updateUserTokens(costOfRequest);
+          const response = await authRequest(
+            authentication?.currentUser,
+            generateDescription,
+            reqBody
+          );
+          setDescriptions([response.result]);
+          setInitialState({
+            productName: productName,
+            shortDescription: shortDescription
+              .split(" ")
+              .map((i: string) => i.toLowerCase())
+              .join(" "),
+            maxLength: Number(maxLength),
+          });
+        }
+      }
     }
+
+    setLoading(false);
   };
 
   const loadMore = async () => {
-    if (authentication && initialState) {
-      setLoading(true);
-      const reqBody = {
-        productName: initialState.productName,
-        shortDescription: initialState.shortDescription,
-        maxLength: initialState.maxLength,
-        previousOutput: descriptions,
-      };
-      const response = await authRequest(
-        authentication,
-        generateMoreDescription,
-        reqBody
-      );
-      setDescriptions([...descriptions, response.result]);
-      setLoading(false);
-      setShowHint(true);
+    setLoading(true);
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser && initialState) {
+          await user.updateUserTokens(costOfRequest);
+          const reqBody = {
+            productName: initialState.productName,
+            shortDescription: initialState.shortDescription,
+            maxLength: initialState.maxLength,
+            previousOutput: descriptions,
+          };
+          const response = await authRequest(
+            authentication?.currentUser,
+            generateMoreDescription,
+            reqBody
+          );
+          setDescriptions([...descriptions, response.result]);
+          setShowHint(true);
+        }
+        setLoading(false);
+      }
     }
   };
   const handleBanner = (b: boolean) => {
     setShowHint(b);
   };
   return (
-    <main className="h-full bg-slate-100">
+    <main className="h-full bg-slate-100 scroll-smooth">
       <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
-        <h1 className="text-2xl md:text-3xl text-slate-800 font-bold mb-3">
-          Product Description Generator
-        </h1>
-        <div className="mb-3 ">
+        <GeneratorHeader
+          loading={loading}
+          header={"Product Description Generator"}
+        />
+        <div className="my-3">
           {showHint && (
             <WarningBanner hideBanner={handleBanner}>
               Hint! If you are getting the same output repeatedly or are getting
@@ -105,11 +128,11 @@ const ProductDescription = () => {
             </WarningBanner>
           )}
         </div>
-        <div className="h-full flex gap-10">
+        <div className="h-full flex flex-col md:flex-row gap-10">
           {/* Form */}
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[475px]"
+            className="md:w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[475px]"
           >
             <h2 className="text-md font-medium text-center">
               Generator Settings

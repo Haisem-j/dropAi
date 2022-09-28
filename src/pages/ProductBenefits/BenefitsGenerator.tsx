@@ -13,13 +13,22 @@ const BenefitsGenerator = ({
   loadMore,
 }: BenefitsGeneratorProps) => {
   const toast = React.useContext(ToastContext);
+  const loadMoreRef = React.useRef<HTMLButtonElement>(null);
 
   const copyToClip = (name: string) => {
     navigator.clipboard.writeText(name);
     toast?.createToast("Copied to clipboard!");
   };
+  const executeScroll = () => {
+    if (loadMoreRef?.current) loadMoreRef.current.scrollIntoView();
+  };
+  React.useEffect(() => {
+    if (!loading && loadMoreRef?.current) {
+      executeScroll();
+    }
+  }, [loading]);
   return (
-    <div className="w-2/3 bg-white shadow-lg rounded-sm border border-slate-200 p-6 min-h-[475px]">
+    <div className="md:w-2/3 bg-white shadow-lg rounded-sm border border-slate-200 p-6 min-h-[475px]">
       <h2 className="text-md font-medium text-center">Benefits Generated</h2>
       {benefits.length === 0 ? (
         <div className="flex justify-center items-center h-full">
@@ -51,6 +60,7 @@ const BenefitsGenerator = ({
               }}
               value="Generate"
               disabled={loading}
+              ref={loadMoreRef}
             >
               Load More
             </button>

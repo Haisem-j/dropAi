@@ -1,9 +1,12 @@
 import React from "react";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
+import GeneratorHeader from "../../components/GeneratorHeader";
 import Tooltip from "../../components/Tooltip";
 
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
+import { ToastContext } from "../../context/Toast";
+import { UserContext } from "../../context/UserContext";
 import { generateBenefits, generateMoreBenefits } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
 import BenefitsGenerator from "./BenefitsGenerator";
@@ -19,7 +22,9 @@ const ProductBenefits = () => {
   const [initialState, setInitialState] = React.useState<FVals | null>(null);
 
   const authentication = React.useContext(AuthContext);
-
+  const costOfRequest = 30;
+  const user = React.useContext(UserContext);
+  const toast = React.useContext(ToastContext);
   const {
     register,
     handleSubmit,
@@ -30,6 +35,7 @@ const ProductBenefits = () => {
     shortDescription,
     seed,
   }) => {
+    setLoading(true);
     const reqBody: FVals = {
       productName: productName,
       shortDescription: shortDescription
@@ -40,63 +46,76 @@ const ProductBenefits = () => {
     if (seed) {
       reqBody["seed"] = seed;
     }
-    if (authentication) {
-      setLoading(true);
-      const response: { result: string } = await authRequest(
-        authentication,
-        generateBenefits,
-        reqBody
-      );
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser) {
+          await user.updateUserTokens(costOfRequest);
+          const response: { result: string } = await authRequest(
+            authentication?.currentUser,
+            generateBenefits,
+            reqBody
+          );
 
-      // Format incoming data -> [0] = useless string, [1,n] = has - in front. Remove
-      const formattedOutput: string[] = [];
-      response.result.split("\n").forEach((item, i) => {
-        if (item) {
-          formattedOutput.push(item.substring(1).trim());
+          // Format incoming data -> [0] = useless string, [1,n] = has - in front. Remove
+          const formattedOutput: string[] = [];
+          response.result.split("\n").forEach((item, i) => {
+            if (item) {
+              formattedOutput.push(item.substring(1).trim());
+            }
+          });
+          setBenefits([...formattedOutput]);
+          setInitialState({
+            productName: productName,
+            shortDescription: shortDescription
+              .split(" ")
+              .map((i: string) => i.toLowerCase())
+              .join(" "),
+          });
         }
-      });
-      console.log("Output -", response);
-
-      setBenefits([...formattedOutput]);
-      setInitialState({
-        productName: productName,
-        shortDescription: shortDescription
-          .split(" ")
-          .map((i: string) => i.toLowerCase())
-          .join(" "),
-      });
-      setLoading(false);
+      }
     }
+    setLoading(false);
   };
   const loadMore = async () => {
-    if (authentication && initialState) {
-      setLoading(true);
-      const reqBody = {
-        productName: initialState.productName,
-        shortDescription: initialState.shortDescription,
-        previousOutput: benefits,
-      };
-      const response: { result: string } = await authRequest(
-        authentication,
-        generateMoreBenefits,
-        reqBody
-      );
-      // Format incoming data -> [0] = useless string, [1,n] = has - in front. Remove
-      const formattedOutput: string[] = [];
-      response.result
-        .replace(/(\r\n|\n|\r)/gm, "")
-        .split("-")
-        .forEach((item, i) => {
-          if (item) {
-            formattedOutput.push(item.trim());
-          }
-        });
-      console.log("Output Load More -", response);
+    setLoading(true);
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser && initialState) {
+          const reqBody = {
+            productName: initialState.productName,
+            shortDescription: initialState.shortDescription,
+            previousOutput: benefits,
+          };
+          await user.updateUserTokens(costOfRequest);
+          const response: { result: string } = await authRequest(
+            authentication?.currentUser,
+            generateMoreBenefits,
+            reqBody
+          );
+          // Format incoming data -> [0] = useless string, [1,n] = has - in front. Remove
+          const formattedOutput: string[] = [];
+          response.result
+            .replace(/(\r\n|\n|\r)/gm, "")
+            .split("-")
+            .forEach((item, i) => {
+              if (item) {
+                formattedOutput.push(item.trim());
+              }
+            });
+          console.log("Output Load More -", response);
 
-      setBenefits([...benefits, ...formattedOutput]);
-      setLoading(false);
-      setShowHint(true);
+          setBenefits([...benefits, ...formattedOutput]);
+          setShowHint(true);
+        }
+      }
     }
+    setLoading(false);
   };
   const handleBanner = (b: boolean) => {
     setShowHint(b);
@@ -104,10 +123,12 @@ const ProductBenefits = () => {
   return (
     <main className="h-full bg-slate-100">
       <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
-        <h1 className="text-2xl md:text-3xl text-slate-800 font-bold mb-3">
-          Product Benefits Generator
-        </h1>
-        <div className="mb-3 ">
+        <GeneratorHeader
+          loading={loading}
+          header={"Product Benefits Generator"}
+        />
+
+        <div className="my-3">
           {showHint && (
             <WarningBanner hideBanner={handleBanner}>
               Hint! If you are getting the same output repeatedly or are getting
@@ -117,10 +138,10 @@ const ProductBenefits = () => {
             </WarningBanner>
           )}
         </div>
-        <div className="h-full flex gap-10">
+        <div className="h-full flex flex-col md:flex-row gap-10">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[475px]"
+            className="md:w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[475px]"
           >
             <h2 className="text-md font-medium text-center">
               Generator Settings

@@ -267,7 +267,68 @@ export const checkoutPayment = async (
   d: { paymentID: string }
 ) => {
   try {
-    const response = await fetch(`${BASE_URL}api/create-checkout-session`, {
+    const response = await fetch(
+      `${BASE_URL}api/payments/create-checkout-session`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: "Bearer " + idToken,
+        },
+        body: JSON.stringify(d),
+      }
+    );
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
+};
+
+export const createUser = async (idToken: string, d: { uid: string }) => {
+  try {
+    const response = await fetch(`${BASE_URL}api/user/create-user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: "Bearer " + idToken,
+      },
+      body: JSON.stringify(d),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
+};
+export const getUser = async (idToken: string, d: { uid: string }) => {
+  try {
+    const response = await fetch(`${BASE_URL}api/user/get-user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: "Bearer " + idToken,
+      },
+      body: JSON.stringify(d),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    return data;
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
+};
+export const updateTokens = async (
+  idToken: string,
+  d: { uid: string; tokensUser: number }
+) => {
+  try {
+    const response = await fetch(`${BASE_URL}api/user/update-tokens`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -284,9 +345,12 @@ export const checkoutPayment = async (
   }
 };
 
-export const createUser = async (idToken: string, d: { uid: string }) => {
+export const getBillingInfo = async (
+  idToken: string,
+  d: { paymentId: number }
+) => {
   try {
-    const response = await fetch(`${BASE_URL}api/user/create-user`, {
+    const response = await fetch(`${BASE_URL}api/payments/get-billing-info`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

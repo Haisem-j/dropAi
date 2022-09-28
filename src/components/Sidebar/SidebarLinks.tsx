@@ -1,4 +1,5 @@
 import { useContext } from "react";
+import { isMobile } from "react-device-detect";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -6,9 +7,15 @@ interface SidebarLinksProps {
   title: string;
   path: string;
   children: React.ReactNode;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-const SidebarLinks = ({ title, path, children }: SidebarLinksProps) => {
+const SidebarLinks = ({
+  title,
+  path,
+  children,
+  setSidebarOpen,
+}: SidebarLinksProps) => {
   const location = useLocation();
   const authentication = useContext(AuthContext);
   const navigate = useNavigate();
@@ -47,6 +54,11 @@ const SidebarLinks = ({ title, path, children }: SidebarLinksProps) => {
       className={`px-3 py-2 rounded-sm mb-0.5 last:mb-0 ${
         pathname === path && "bg-slate-900"
       }`}
+      onClick={() => {
+        if (isMobile) {
+          setSidebarOpen(false);
+        }
+      }}
     >
       <NavLink
         end

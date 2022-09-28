@@ -5,7 +5,7 @@ import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
 import { checkoutPayment } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
-import { STANDARD_MONTHLY } from "../../utils/paymentsIds";
+import Plan from "./Plan";
 
 function PlansPanel() {
   const [annual, setAnnual] = useState(false);
@@ -22,16 +22,17 @@ function PlansPanel() {
   const handleBanner = (b: boolean) => {
     setPaymentFailed(b);
   };
-  const handlePayment = async (paymentId: string) => {
+  const handlePayment = async (paymentId: string, newPlan: string) => {
     setPaymentFailed(false);
-    if (authentication) {
+    if (authentication?.currentUser) {
       try {
         setLoading(true);
         const reqBody = {
           paymentId,
+          newPlan,
         };
         const response = await authRequest(
-          authentication,
+          authentication?.currentUser,
           checkoutPayment,
           reqBody
         );
@@ -42,6 +43,43 @@ function PlansPanel() {
       }
     }
   };
+  const plansObj: {
+    planType: "Free" | "Standard" | "Unlimited";
+    colour: string;
+    subheading: string;
+    price: { monthly: number; yearly: number };
+  }[] = [
+    {
+      planType: "Free",
+      colour: "indigo",
+      subheading:
+        "Ideal for first time dropshippers. Those who are trying it out and would like to try out this service. Includes 300 tokens.",
+      price: {
+        monthly: 0,
+        yearly: 0,
+      },
+    },
+    {
+      planType: "Standard",
+      colour: "indigo",
+      subheading:
+        "Ideal for seasoned dropshippers. Those who are trying out multiple products/stores. Includes 6000 tokens",
+      price: {
+        monthly: 15,
+        yearly: 144,
+      },
+    },
+    {
+      planType: "Unlimited",
+      colour: "indigo",
+      subheading:
+        "Ideal for professional dropshippers. Those who pump out multiple products/stores/adverts and need new content daily.",
+      price: {
+        monthly: 29.99,
+        yearly: 288,
+      },
+    },
+  ];
   return (
     <main className="min-h-full bg-slate-100 ">
       <div className="mb-3">
@@ -62,212 +100,47 @@ function PlansPanel() {
         </div>
 
         <div className="flex flex-col items-center">
-          <div className="bg-white shadow-lg rounded-sm border border-slate-200 w-2/3 ">
+          <div className="bg-white shadow-lg rounded-sm border border-slate-200 md:w-3/4 ">
             {/* Panel body */}
             <div className="p-6 space-y-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="text-sm text-slate-500 font-medium">
+                  Monthly
+                </div>
+                <div className="form-switch">
+                  <input
+                    type="checkbox"
+                    id="toggle"
+                    className="sr-only"
+                    checked={annual}
+                    onChange={() => setAnnual(!annual)}
+                  />
+                  <label className="bg-slate-400" htmlFor="toggle">
+                    <span
+                      className="bg-white shadow-sm"
+                      aria-hidden="true"
+                    ></span>
+                    <span className="sr-only">Pay annually</span>
+                  </label>
+                </div>
+                <div className="text-sm text-slate-500 font-medium">
+                  Annually <span className="text-emerald-500">(-20%)</span>
+                </div>
+              </div>
               {/* Plans */}
               <section>
                 {/* Pricing */}
-                <div className="flex gap-6">
-                  {/* Tab 3 */}
-                  <div className="relative col-span-full xl:col-span-4 bg-white shadow-md rounded-sm border border-slate-200 w-2/3">
-                    <div
-                      className="absolute top-0 left-0 right-0 h-0.5 bg-indigo-500"
-                      aria-hidden="true"
-                    ></div>
-                    <div className="px-5 pt-5 pb-6 border-b border-slate-200">
-                      <header className="flex items-center mb-2">
-                        <div className="w-6 h-6 rounded-full shrink-0 bg-gradient-to-tr from-indigo-500 to-indigo-300 mr-3">
-                          <svg
-                            className="w-6 h-6 fill-current text-white"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M12 17a.833.833 0 01-.833-.833 3.333 3.333 0 00-3.334-3.334.833.833 0 110-1.666 3.333 3.333 0 003.334-3.334.833.833 0 111.666 0 3.333 3.333 0 003.334 3.334.833.833 0 110 1.666 3.333 3.333 0 00-3.334 3.334c0 .46-.373.833-.833.833z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-lg text-slate-800 font-semibold">
-                          Monthly Payments
-                        </h3>
-                      </header>
-                      <div className="text-sm mb-2">
-                        Ideal for individuals that are just starting to test
-                        products.
-                      </div>
-                      {/* Price */}
-                      <div className="text-slate-800 font-bold mb-4">
-                        <span className="text-2xl">$</span>
-                        <span className="text-3xl">
-                          {annual ? "278" : "29"}
-                        </span>
-                        <span className="text-slate-500 font-medium text-sm">
-                          /mo
-                        </span>
-                      </div>
-                      {/* CTA */}
-                      <button
-                        className="btn bg-indigo-500 hover:bg-indigo-600 text-white w-full disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
-                        onClick={() => handlePayment(STANDARD_MONTHLY)}
-                        disabled={loading}
-                      >
-                        {loading && (
-                          <div className="flex items-center justify-center">
-                            <svg
-                              className="animate-spin w-4 h-4 fill-current shrink-0"
-                              viewBox="0 0 16 16"
-                            >
-                              <path d="M8 16a7.928 7.928 0 01-3.428-.77l.857-1.807A6.006 6.006 0 0014 8c0-3.309-2.691-6-6-6a6.006 6.006 0 00-5.422 8.572l-1.806.859A7.929 7.929 0 010 8c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z" />
-                            </svg>
-                            <span className="ml-2">Loading</span>
-                          </div>
-                        )}
-                        {!loading && "Upgrade"}
-                      </button>
-                    </div>
-                    <div className="px-5 pt-4 pb-5">
-                      <div className="text-xs text-slate-800 font-semibold uppercase mb-4">
-                        What's included
-                      </div>
-                      {/* List */}
-                      <ul>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            Unlimited access to all the tools
-                          </div>
-                        </li>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            No limit to any content generated
-                          </div>
-                        </li>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            Exceptional customer support
-                          </div>
-                        </li>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            Guaranteed money back within 24 hours
-                          </div>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="relative col-span-full xl:col-span-4 bg-white shadow-md rounded-sm border border-slate-200 w-2/3">
-                    <div
-                      className="absolute top-0 left-0 right-0 h-0.5 bg-indigo-500"
-                      aria-hidden="true"
-                    ></div>
-                    <div className="px-5 pt-5 pb-6 border-b border-slate-200">
-                      <header className="flex items-center mb-2">
-                        <div className="w-6 h-6 rounded-full shrink-0 bg-gradient-to-tr from-indigo-500 to-indigo-300 mr-3">
-                          <svg
-                            className="w-6 h-6 fill-current text-white"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M12 17a.833.833 0 01-.833-.833 3.333 3.333 0 00-3.334-3.334.833.833 0 110-1.666 3.333 3.333 0 003.334-3.334.833.833 0 111.666 0 3.333 3.333 0 003.334 3.334.833.833 0 110 1.666 3.333 3.333 0 00-3.334 3.334c0 .46-.373.833-.833.833z" />
-                          </svg>
-                        </div>
-                        <h3 className="text-lg text-slate-800 font-semibold">
-                          Yearly Payments
-                        </h3>
-                      </header>
-                      <div className="text-sm mb-2">
-                        Ideal for individuals that are constantly testing new
-                        products/stores.
-                      </div>
-                      {/* Price */}
-                      <div className="text-slate-800 font-bold mb-4">
-                        <span className="text-2xl">$</span>
-                        <span className="text-3xl">278</span>
-                        <span className="text-slate-500 font-medium text-sm">
-                          /year
-                        </span>
-                        <span className="text-emerald-500 text-sm font-normal ml-1">
-                          (-20%)
-                        </span>
-                      </div>
-                      {/* CTA */}
-                      <button className="btn bg-indigo-500 hover:bg-indigo-600 text-white w-full">
-                        Upgrade
-                      </button>
-                    </div>
-                    <div className="px-5 pt-4 pb-5">
-                      <div className="text-xs text-slate-800 font-semibold uppercase mb-4">
-                        What's included
-                      </div>
-                      {/* List */}
-                      <ul>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            Unlimited access to all the tools
-                          </div>
-                        </li>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            No limit to any content generated
-                          </div>
-                        </li>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            Exceptional customer support
-                          </div>
-                        </li>
-                        <li className="flex items-center py-1">
-                          <svg
-                            className="w-3 h-3 shrink-0 fill-current text-emerald-500 mr-2"
-                            viewBox="0 0 12 12"
-                          >
-                            <path d="M10.28 1.28L3.989 7.575 1.695 5.28A1 1 0 00.28 6.695l3 3a1 1 0 001.414 0l7-7A1 1 0 0010.28 1.28z" />
-                          </svg>
-                          <div className="text-sm">
-                            Guaranteed money back within 24 hours
-                          </div>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-12 gap-6">
+                  {plansObj.map(({ planType, colour, subheading, price }) => (
+                    <Plan
+                      planType={planType}
+                      colour={colour}
+                      annual={annual}
+                      subheading={subheading}
+                      price={price}
+                      handlePayment={handlePayment}
+                    />
+                  ))}
                 </div>
               </section>
 

@@ -31,24 +31,28 @@ const Register = () => {
       const matches = password.localeCompare(confirmPassword);
       if (matches === -1) throw new Error("confirmPassword");
       const userCreds = await authentication?.signup(email, password);
-      // Create user in db
-      if (authentication) {
-        const response: { result: string } = await authRequest(
-          authentication,
-          createUser,
-          { uid: userCreds?.user.uid }
-        );
-        console.log(response);
-      }
-      // if (userCreds) await authentication?.verifyEmail(userCreds?.user);
+      const user = userCreds?.user;
 
-      navigate(DASHBOARD);
+      // Create user in db
+      if (user) {
+        await authRequest(user, createUser, { uid: user.uid });
+        if (userCreds) await authentication?.verifyEmail(user);
+        navigate(DASHBOARD);
+      }
     } catch (e: any) {
       if (e.message === "confirmPassword") {
         setErr({ password: true });
       } else {
         setErr({ email: true });
       }
+    }
+  };
+  const onSignInWithGoogle = async () => {
+    const userCreds = await authentication?.loginWithGoogle();
+    const user = userCreds?.user;
+    if (user) {
+      const response = await authRequest(user, createUser, { uid: user.uid });
+      navigate(DASHBOARD);
     }
   };
   React.useEffect(() => {
@@ -136,13 +140,13 @@ const Register = () => {
             </div>
           </div>
           <div className="pt-5 mt-6 border-t border-slate-200">
-            <Link
-              className="btn bg-white border-blue-500 hover:border-blue-300 text-blue-500 hover:text-blue-300 w-full whitespace-nowrap"
-              to="/"
+            <div
+              className="btn bg-white border-blue-500 hover:border-blue-300 text-blue-500 hover:text-blue-300 w-full whitespace-nowrap cursor-pointer"
+              onClick={() => onSignInWithGoogle()}
             >
               <FcGoogle className="mr-2" />
               Login with Google
-            </Link>
+            </div>
           </div>
           <div className="flex items-center justify-between mt-6">
             <div className="mr-1">

@@ -1,9 +1,12 @@
 import React from "react";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
+import GeneratorHeader from "../../components/GeneratorHeader";
 
 import Tooltip from "../../components/Tooltip";
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
+import { ToastContext } from "../../context/Toast";
+import { UserContext } from "../../context/UserContext";
 import { generateMoreNames, generateNames } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
 import NamesGenerated from "./NamesGenerated";
@@ -14,6 +17,9 @@ const ProductNameGenerator = () => {
   const [loading, setLoading] = React.useState(false);
   const [previousState, setPreviousState] = React.useState({});
   const [showHint, setShowHint] = React.useState(false);
+  const costOfRequest = 30;
+  const user = React.useContext(UserContext);
+  const toast = React.useContext(ToastContext);
 
   const {
     register,
@@ -21,43 +27,62 @@ const ProductNameGenerator = () => {
     formState: { errors },
   } = useForm();
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
-    if (authentication) {
-      setPreviousState({ ...data });
-      setLoading(true);
-      const response = await authRequest(authentication, generateNames, data);
-      const name = response.result.replace(/(\r\n|\n|\r)/gm, "").split(",");
-      setLoading(false);
-      setNames([...name]);
+    setLoading(true);
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser) {
+          await user.updateUserTokens(costOfRequest);
+          setPreviousState({ ...data });
+          const response = await authRequest(
+            authentication?.currentUser,
+            generateNames,
+            data
+          );
+          const name = response.result.replace(/(\r\n|\n|\r)/gm, "").split(",");
+          setNames([...name]);
+        }
+      }
     }
+    setLoading(false);
   };
   const loadMore = async () => {
-    if (authentication) {
-      setLoading(true);
-      const data = {
-        pNames: names.join(","),
-        previousState,
-      };
-      const response = await authRequest(
-        authentication,
-        generateMoreNames,
-        data
-      );
-      const name = response.result.replace(/(\r\n|\n|\r)/gm, "").split(",");
-      setNames([...names, ...name]);
-      setShowHint(true);
-      setLoading(false);
+    setLoading(true);
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser) {
+          const data = {
+            pNames: names.join(","),
+            previousState,
+          };
+          await user.updateUserTokens(costOfRequest);
+          const response = await authRequest(
+            authentication?.currentUser,
+            generateMoreNames,
+            data
+          );
+          const name = response.result.replace(/(\r\n|\n|\r)/gm, "").split(",");
+          setNames([...names, ...name]);
+          setShowHint(true);
+        }
+      }
     }
+
+    setLoading(false);
   };
   const handleBanner = (b: boolean) => {
     setShowHint(b);
   };
   return (
-    <main className="h-full bg-slate-100 overflow-hidden">
-      <div className="h-[90%] px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-        <h1 className="text-2xl md:text-3xl text-slate-800 font-bold mb-3">
-          Product Name Generator
-        </h1>
-        <div className="mb-3 ">
+    <main className="h-full bg-slate-100 scroll-smooth">
+      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
+        <GeneratorHeader loading={loading} header={"Product Name Generator"} />
+        <div className="my-3 ">
           {showHint && (
             <WarningBanner hideBanner={handleBanner}>
               Hint! If you are getting the same output repeatedly or are getting
@@ -67,11 +92,11 @@ const ProductNameGenerator = () => {
             </WarningBanner>
           )}
         </div>
-        <div className="h-full flex gap-10">
+        <div className="h-full flex flex-col md:flex-row gap-10">
           {/* Form */}
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="max-h-[450px] w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6"
+            className="max-h-[450px] md:w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6"
           >
             <h2 className="text-md font-medium text-center">
               Generator Settings

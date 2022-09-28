@@ -1,10 +1,13 @@
 import React from "react";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import { FaTiktok, FaFacebook, FaInstagram } from "react-icons/fa";
+import GeneratorHeader from "../../components/GeneratorHeader";
 
 import Tooltip from "../../components/Tooltip";
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
+import { ToastContext } from "../../context/Toast";
+import { UserContext } from "../../context/UserContext";
 import { generateAd, generateMoreAds } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
 import AdGenerator from "./AdGenerator";
@@ -25,6 +28,9 @@ const SocialMedia = () => {
   const [platformState, setPlatformState] = React.useState("facebook");
 
   const authentication = React.useContext(AuthContext);
+  const costOfRequest = 30;
+  const user = React.useContext(UserContext);
+  const toast = React.useContext(ToastContext);
 
   const {
     register,
@@ -36,48 +42,64 @@ const SocialMedia = () => {
     shortDescription,
     targetAudience,
   }) => {
+    setLoading(true);
     const reqBody = {
       platform: platformState,
       targetAudience,
       productName,
       shortDescription,
     };
-    if (authentication) {
-      setLoading(true);
-      const response: { result: string } = await authRequest(
-        authentication,
-        generateAd,
-        reqBody
-      );
-      setAds([response.result]);
-      setInitialState({
-        productName,
-        targetAudience,
-        shortDescription,
-        platform: platformState,
-      });
-      setLoading(false);
+
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser) {
+          await user.updateUserTokens(costOfRequest);
+          const response: { result: string } = await authRequest(
+            authentication?.currentUser,
+            generateAd,
+            reqBody
+          );
+          setAds([response.result]);
+          setInitialState({
+            productName,
+            targetAudience,
+            shortDescription,
+            platform: platformState,
+          });
+        }
+      }
     }
+    setLoading(false);
   };
   const loadMore = async () => {
-    if (authentication && initialState) {
-      setLoading(true);
-      const reqBody = {
-        productName: initialState.productName,
-        shortDescription: initialState.shortDescription,
-        targetAudience: initialState.targetAudience,
-        previousOutput: ads,
-      };
-      const response = await authRequest(
-        authentication,
-        generateMoreAds,
-        reqBody
-      );
-      console.log(response.result);
-      setAds([...ads, response.result]);
-      setLoading(false);
-      setShowHint(true);
+    setLoading(true);
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser && initialState) {
+          const reqBody = {
+            productName: initialState.productName,
+            shortDescription: initialState.shortDescription,
+            targetAudience: initialState.targetAudience,
+            previousOutput: ads,
+          };
+          await user.updateUserTokens(costOfRequest);
+          const response = await authRequest(
+            authentication?.currentUser,
+            generateMoreAds,
+            reqBody
+          );
+          setAds([...ads, response.result]);
+          setShowHint(true);
+        }
+      }
     }
+    setLoading(false);
   };
   const handleBanner = (b: boolean) => {
     setShowHint(b);
@@ -121,12 +143,13 @@ const SocialMedia = () => {
   };
   const clearForm = () => {};
   return (
-    <main className="h-full bg-slate-100">
+    <main className="h-full bg-slate-100 scroll-smooth">
       <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
-        <h1 className="text-2xl md:text-3xl text-slate-800 font-bold mb-3">
-          Social Media Ad Generator
-        </h1>
-        <div className="mb-3 ">
+        <GeneratorHeader
+          loading={loading}
+          header={"Social Media Ad Generator"}
+        />
+        <div className="my-3 ">
           {showHint && (
             <WarningBanner hideBanner={handleBanner}>
               Hint! If you are getting the same output repeatedly or are getting
@@ -135,10 +158,10 @@ const SocialMedia = () => {
             </WarningBanner>
           )}
         </div>
-        <div className="h-full flex gap-10">
+        <div className="h-full flex flex-col md:flex-row gap-10">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[450px]"
+            className="md:w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[450px]"
           >
             <h2 className="text-md font-medium text-center">
               Generator Settings

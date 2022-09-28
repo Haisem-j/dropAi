@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export const ToastContext = React.createContext<{
   createToast: (message: string) => void;
+  toastError: (message: string) => void;
 } | null>(null);
 
 export const useToast = () => {
@@ -13,10 +14,33 @@ export const useToast = () => {
 
 export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   const createToast = (message: string): void => {
-    toast(message);
+    toast.success(message, {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: true,
+      progress: undefined,
+      theme: "colored",
+    });
   };
+  const toastError = (message: string): void => {
+    toast.error(message, {
+      position: "bottom-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: false,
+      draggable: true,
+      progress: undefined,
+      theme: "colored",
+    });
+  };
+
   const value = {
     createToast,
+    toastError,
   };
   return (
     <ToastContext.Provider value={value}>

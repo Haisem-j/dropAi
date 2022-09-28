@@ -1,9 +1,12 @@
 import React from "react";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
+import GeneratorHeader from "../../components/GeneratorHeader";
 import Tooltip from "../../components/Tooltip";
 
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
+import { ToastContext } from "../../context/Toast";
+import { UserContext } from "../../context/UserContext";
 import { generateMoreTaglines, generateTaglines } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
 import { trimOutput } from "../../utils/stringManipulations";
@@ -19,6 +22,9 @@ const LandingTaglines = () => {
   const [initialState, setInitialState] = React.useState<FVals | null>(null);
 
   const authentication = React.useContext(AuthContext);
+  const costOfRequest = 30;
+  const user = React.useContext(UserContext);
+  const toast = React.useContext(ToastContext);
 
   const {
     register,
@@ -29,6 +35,7 @@ const LandingTaglines = () => {
     productName,
     shortDescription,
   }) => {
+    setLoading(true);
     const reqBody: FVals = {
       productName: productName,
       shortDescription: shortDescription
@@ -36,59 +43,72 @@ const LandingTaglines = () => {
         .map((i: string) => i.toLowerCase())
         .join(" "),
     };
-    if (authentication) {
-      setLoading(true);
-      const response: { result: string } = await authRequest(
-        authentication,
-        generateTaglines,
-        reqBody
-      );
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser) {
+          await user.updateUserTokens(costOfRequest);
+          const response: { result: string } = await authRequest(
+            authentication?.currentUser,
+            generateTaglines,
+            reqBody
+          );
 
-      // Format incoming data
-      const formattedOutput: string[] = trimOutput(response.result);
+          // Format incoming data
+          const formattedOutput: string[] = trimOutput(response.result);
 
-      setTaglines([...formattedOutput]);
-      setInitialState({
-        productName: productName,
-        shortDescription: shortDescription
-          .split(" ")
-          .map((i: string) => i.toLowerCase())
-          .join(" "),
-      });
-      setLoading(false);
+          setTaglines([...formattedOutput]);
+          setInitialState({
+            productName: productName,
+            shortDescription: shortDescription
+              .split(" ")
+              .map((i: string) => i.toLowerCase())
+              .join(" "),
+          });
+        }
+      }
     }
+    setLoading(false);
   };
   const loadMore = async () => {
-    if (authentication && initialState) {
-      setLoading(true);
-      const reqBody = {
-        productName: initialState.productName,
-        shortDescription: initialState.shortDescription,
-        previousOutput: taglines,
-      };
-      const response: { result: string } = await authRequest(
-        authentication,
-        generateMoreTaglines,
-        reqBody
-      );
-      // Format incoming data
-      const formattedOutput: string[] = trimOutput(response.result);
+    setLoading(true);
+    if (user) {
+      const checkTokens = user.checkTokenAvailablity(costOfRequest);
+      if (!checkTokens) {
+        toast?.toastError("Error: Not enough tokens available.");
+      } else {
+        if (authentication?.currentUser && initialState) {
+          const reqBody = {
+            productName: initialState.productName,
+            shortDescription: initialState.shortDescription,
+            previousOutput: taglines,
+          };
+          await user.updateUserTokens(costOfRequest);
+          const response: { result: string } = await authRequest(
+            authentication?.currentUser,
+            generateMoreTaglines,
+            reqBody
+          );
+          // Format incoming data
+          const formattedOutput: string[] = trimOutput(response.result);
 
-      setTaglines([...taglines, ...formattedOutput]);
-      setLoading(false);
-      setShowHint(true);
+          setTaglines([...taglines, ...formattedOutput]);
+          setShowHint(true);
+        }
+      }
     }
+    setLoading(false);
   };
   const handleBanner = (b: boolean) => {
     setShowHint(b);
   };
   return (
-    <main className="h-full bg-slate-100">
+    <main className="h-full bg-slate-100 scroll-smooth">
       <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto bg-slate-100">
-        <h1 className="text-2xl md:text-3xl text-slate-800 font-bold mb-3">
-          Taglines Generator
-        </h1>
-        <div className="mb-3 ">
+        <GeneratorHeader loading={loading} header={"Taglines Generator"} />
+        <div className="my-3">
           {showHint && (
             <WarningBanner hideBanner={handleBanner}>
               Hint! If you are getting the same output repeatedly or are getting
@@ -98,10 +118,10 @@ const LandingTaglines = () => {
             </WarningBanner>
           )}
         </div>
-        <div className="h-full flex gap-10">
+        <div className="h-full flex flex-col md:flex-row gap-10">
           <form
             onSubmit={handleSubmit(onSubmit)}
-            className="w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[310px]"
+            className="md:w-1/3 flex flex-col gap-5 bg-white shadow-lg rounded-sm border border-slate-200 p-6 max-h-[310px]"
           >
             <h2 className="text-md font-medium text-center">
               Generator Settings

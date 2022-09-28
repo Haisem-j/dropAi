@@ -5,7 +5,8 @@ import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import AuthForm from "../../../components/AuthForm";
 import { AuthContext } from "../../../context/AuthContext";
 import { DASHBOARD } from "../../constants";
-import { signInWithGoogle } from "../../../firebase";
+import { createUser } from "../../../Requests";
+import { authRequest } from "../../../utils/authenticationRequest";
 
 const Login = () => {
   const [err, setErr] = React.useState(false);
@@ -30,7 +31,14 @@ const Login = () => {
       setErr(true);
     }
   };
-
+  const onSignInWithGoogle = async () => {
+    const userCreds = await authentication?.loginWithGoogle();
+    const user = userCreds?.user;
+    if (user) {
+      const response = await authRequest(user, createUser, { uid: user.uid });
+      navigate(DASHBOARD);
+    }
+  };
   React.useEffect(() => {
     if (authentication?.currentUser) {
       navigate(DASHBOARD);
@@ -91,7 +99,7 @@ const Login = () => {
           <div className="pt-5 mt-6 border-t border-slate-200">
             <div
               className="cursor-pointer btn bg-white border-blue-500 hover:border-blue-300 text-blue-500 hover:text-blue-300 w-full whitespace-nowrap"
-              onClick={() => signInWithGoogle()}
+              onClick={() => onSignInWithGoogle()}
             >
               <FcGoogle className="mr-2" />
               Login with Google
