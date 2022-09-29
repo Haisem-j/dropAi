@@ -15,6 +15,7 @@ export interface UserProps {
   checkTokenAvailablity: (costPerRequest: number) => boolean | undefined;
   updateUserTokens: (tokensUsed: number) => Promise<void>;
   getPlanType: () => "Free" | "Standard" | "Unlimited" | undefined;
+  setUserInfo: (a: DropAiUser) => void;
   user: DropAiUser | null;
 }
 

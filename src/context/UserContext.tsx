@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from "react";
 import { DropAiUser, UserProps } from "../interfaces/interface";
-import { getUser, updateTokens } from "../Requests";
+import { createUser, getUser, updateTokens } from "../Requests";
 import { authRequest } from "../utils/authenticationRequest";
 import { AuthContext } from "./AuthContext";
 
@@ -48,11 +48,15 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
   const getPlanType = () => user?.planType;
+  const setUserInfo = (a: DropAiUser) => {
+    setUser(a);
+  };
   const value = {
     getTokens,
     checkTokenAvailablity,
     updateUserTokens,
     getPlanType,
+    setUserInfo,
     user,
   };
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

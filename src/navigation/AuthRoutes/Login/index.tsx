@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
@@ -7,12 +7,15 @@ import { AuthContext } from "../../../context/AuthContext";
 import { DASHBOARD } from "../../constants";
 import { createUser } from "../../../Requests";
 import { authRequest } from "../../../utils/authenticationRequest";
+import { UserContext } from "../../../context/UserContext";
 
 const Login = () => {
   const [err, setErr] = React.useState(false);
   const [errorBody, setErrorBody] = React.useState({});
 
   const authentication = React.useContext(AuthContext);
+  const userC = useContext(UserContext);
+
   const navigate = useNavigate();
 
   const {
@@ -36,6 +39,7 @@ const Login = () => {
     const user = userCreds?.user;
     if (user) {
       const response = await authRequest(user, createUser, { uid: user.uid });
+      userC?.setUserInfo(response.result);
       navigate(DASHBOARD);
     }
   };

@@ -7,15 +7,12 @@ import { AuthContext } from "../../../context/AuthContext";
 import { DASHBOARD } from "../../constants";
 import { authRequest } from "../../../utils/authenticationRequest";
 import { createUser } from "../../../Requests";
-
-interface IFormInputs {
-  firstName: string;
-  lastName: string;
-}
+import { UserContext } from "../../../context/UserContext";
 
 const Register = () => {
   const [err, setErr] = React.useState<any>({});
   const authentication = useContext(AuthContext);
+  const userC = useContext(UserContext);
   const navigate = useNavigate();
 
   const {
@@ -52,6 +49,7 @@ const Register = () => {
     const user = userCreds?.user;
     if (user) {
       const response = await authRequest(user, createUser, { uid: user.uid });
+      userC?.setUserInfo(response.result);
       navigate(DASHBOARD);
     }
   };
