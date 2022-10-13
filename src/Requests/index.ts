@@ -366,3 +366,25 @@ export const getBillingInfo = async (
     return e;
   }
 };
+export const cancelSubscription = async (
+  idToken: string,
+  d: { customerId: number; uid: string }
+) => {
+  try {
+    const response = await fetch(`${BASE_URL}api/payments/cancel-sub`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: "Bearer " + idToken,
+      },
+      body: JSON.stringify(d),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message);
+    // Returns {data: {periodEnd: number}}
+    return data;
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
+};

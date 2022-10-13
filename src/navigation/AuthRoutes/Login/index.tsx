@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm, SubmitHandler, FieldValues } from "react-hook-form";
 import AuthForm from "../../../components/AuthForm";
 import { AuthContext } from "../../../context/AuthContext";
@@ -12,24 +12,50 @@ import { UserContext } from "../../../context/UserContext";
 const Login = () => {
   const [err, setErr] = React.useState(false);
   const [errorBody, setErrorBody] = React.useState({});
-
+  const [redirectPath, setRedirectPath] = React.useState<string | null>(null);
   const authentication = React.useContext(AuthContext);
   const userC = useContext(UserContext);
-
+  const location = useLocation();
   const navigate = useNavigate();
-
+  const toRegister = location.search
+    ? "/register" + location.search
+    : "/register";
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
+  React.useEffect(() => {
+    // Payments redirect ?ref=plans&key=payments&val=mo
+    // Other redirect ?ref=/landing/tagline-generator
+    if (location.search) {
+      let rLink;
+      const redirect = location.search.substring(1).split("&");
+      if (redirect.length > 1) {
+        // Payments
+        rLink =
+          "/" +
+          redirect[0].split("=")[1] +
+          "?" +
+          redirect[1].split("=")[1] +
+          "=" +
+          redirect[2].split("=")[1];
+      } else {
+        // Other
+        rLink = redirect[0].split("=")[1];
+      }
+
+      setRedirectPath(rLink);
+    }
+  }, []);
+
   const onSubmit: SubmitHandler<FieldValues> = async (data) => {
     let { password, email } = data;
     setErr(false);
     try {
       await authentication?.login(email, password);
-      navigate(DASHBOARD);
+      redirectPath ? navigate(redirectPath) : navigate(DASHBOARD);
     } catch (e) {
       setErr(true);
     }
@@ -40,14 +66,14 @@ const Login = () => {
     if (user) {
       const response = await authRequest(user, createUser, { uid: user.uid });
       userC?.setUserInfo(response.result);
-      navigate(DASHBOARD);
+      redirectPath ? navigate(redirectPath) : navigate(DASHBOARD);
     }
   };
   React.useEffect(() => {
     if (authentication?.currentUser) {
-      navigate(DASHBOARD);
+      redirectPath ? navigate(redirectPath) : navigate(DASHBOARD);
     }
-  }, [authentication]);
+  }, []);
 
   return (
     <AuthForm>
@@ -131,7 +157,7 @@ const Login = () => {
             Don’t have an account?{" "}
             <Link
               className="font-medium text-indigo-500 hover:text-indigo-600"
-              to="/register"
+              to={toRegister}
             >
               Sign Up
             </Link>

@@ -25,17 +25,24 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }, [authentication]);
 
   const getTokens = () => {
-    return user?.availableTokens;
+    return user?.planType === "Standard" ? "∞" : user?.availableTokens;
   };
   // Returns true ? user has enough tokens
   const checkTokenAvailablity = (
     costPerRequest: number
   ): boolean | undefined => {
-    if (user) return user?.availableTokens >= costPerRequest;
+    const tokens = getTokens();
+    if (user && tokens) {
+      return user?.planType === "Standard"
+        ? true
+        : tokens >= costPerRequest
+        ? true
+        : false;
+    }
   };
 
   const updateUserTokens = async (tokensUsed: number) => {
-    if (authentication?.currentUser) {
+    if (authentication?.currentUser && user?.planType === "Free") {
       const response = await authRequest(
         authentication?.currentUser,
         updateTokens,

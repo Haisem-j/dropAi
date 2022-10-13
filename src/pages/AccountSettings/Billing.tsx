@@ -1,5 +1,5 @@
-import moment from "moment";
 import React from "react";
+import moment from "moment";
 import { AuthContext } from "../../context/AuthContext";
 import { UserContext } from "../../context/UserContext";
 import { BillingInfo } from "../../interfaces/interface";
@@ -27,7 +27,12 @@ const Billing = () => {
     const plan = billingInfo?.invoices[0];
     return (
       <div className="text-sm font-light">
-        This workspace’s Plan is set to a {plan?.plan?.slice(4)} and will renew
+        This workspace’s Plan is set to a {plan?.plan?.slice(4)} and will{" "}
+        {user?.user?.endOfCycle ? (
+          <strong className="font-medium">end </strong>
+        ) : (
+          "renew "
+        )}
         on{" "}
         <strong className="font-medium">
           {plan?.period &&

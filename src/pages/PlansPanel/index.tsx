@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
+import ModalBlank from "../../components/ModalBlank";
 
 import WarningBanner from "../../components/WarningBanner";
 import { AuthContext } from "../../context/AuthContext";
 import { checkoutPayment } from "../../Requests";
 import { authRequest } from "../../utils/authenticationRequest";
-import Plan from "./Plan";
+import NewPlan from "./NewPlan";
 
 function PlansPanel() {
-  const [annual, setAnnual] = useState(false);
   const [paymentFailed, setPaymentFailed] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
   const authentication = React.useContext(AuthContext);
@@ -43,43 +43,6 @@ function PlansPanel() {
       }
     }
   };
-  const plansObj: {
-    planType: "Free" | "Standard" | "Unlimited";
-    colour: string;
-    subheading: string;
-    price: { monthly: number; yearly: number };
-  }[] = [
-    {
-      planType: "Free",
-      colour: "indigo",
-      subheading:
-        "Ideal for first time dropshippers. Those who are trying it out and would like to try out this service. Includes 300 tokens.",
-      price: {
-        monthly: 0,
-        yearly: 0,
-      },
-    },
-    {
-      planType: "Standard",
-      colour: "indigo",
-      subheading:
-        "Ideal for seasoned dropshippers. Those who are trying out multiple products/stores. Includes 6000 tokens",
-      price: {
-        monthly: 15,
-        yearly: 144,
-      },
-    },
-    {
-      planType: "Unlimited",
-      colour: "indigo",
-      subheading:
-        "Ideal for professional dropshippers. Those who pump out multiple products/stores/adverts and need new content daily.",
-      price: {
-        monthly: 29.99,
-        yearly: 288,
-      },
-    },
-  ];
   return (
     <main className="min-h-full bg-slate-100 ">
       <div className="mb-3">
@@ -103,44 +66,20 @@ function PlansPanel() {
           <div className="bg-white shadow-lg rounded-sm border border-slate-200 md:w-3/4 ">
             {/* Panel body */}
             <div className="p-6 space-y-6">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="text-sm text-slate-500 font-medium">
-                  Monthly
-                </div>
-                <div className="form-switch">
-                  <input
-                    type="checkbox"
-                    id="toggle"
-                    className="sr-only"
-                    checked={annual}
-                    onChange={() => setAnnual(!annual)}
-                  />
-                  <label className="bg-slate-400" htmlFor="toggle">
-                    <span
-                      className="bg-white shadow-sm"
-                      aria-hidden="true"
-                    ></span>
-                    <span className="sr-only">Pay annually</span>
-                  </label>
-                </div>
-                <div className="text-sm text-slate-500 font-medium">
-                  Annually <span className="text-emerald-500">(-20%)</span>
-                </div>
-              </div>
               {/* Plans */}
               <section>
                 {/* Pricing */}
-                <div className="grid grid-cols-12 gap-6">
-                  {plansObj.map(({ planType, colour, subheading, price }) => (
-                    <Plan
-                      planType={planType}
-                      colour={colour}
-                      annual={annual}
-                      subheading={subheading}
-                      price={price}
-                      handlePayment={handlePayment}
-                    />
-                  ))}
+                <div className="grid grid-cols-8 gap-6">
+                  <NewPlan
+                    price={15}
+                    rate={"mo"}
+                    handlePayment={handlePayment}
+                  />
+                  <NewPlan
+                    price={144}
+                    rate={"yr"}
+                    handlePayment={handlePayment}
+                  />
                 </div>
               </section>
 

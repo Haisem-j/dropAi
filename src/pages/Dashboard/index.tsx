@@ -37,78 +37,17 @@ import Home from "./Home";
 export const Dashboard = () => {
   const [sidebarState, setSidebarState] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
-  const [modalOpen, setModalOpen] = React.useState(false);
   const setSidebarOpen = (open: boolean) => setSidebarState(open);
-  const authentication = React.useContext(AuthContext);
   const user = React.useContext(UserContext);
 
-  React.useEffect(() => {
-    if (authentication?.currentUser?.emailVerified) {
-      setModalOpen(false);
-    } else {
-      setModalOpen(true);
-    }
-  }, [authentication?.currentUser?.emailVerified]);
-
   React.useEffect(() => {}, [user]);
-  const resendEmailVerification = async () => {
-    try {
-      if (user?.user && authentication?.currentUser) {
-        setLoading(true);
-        await authentication?.verifyEmail(authentication?.currentUser);
-        setLoading(false);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
+
   return (
     <div
       className={`flex h-screen overflow-hidden ${
         sidebarState ? "sidebar-expanded" : ""
       }`}
     >
-      <ModalBasic
-        id="basic-modal"
-        modalOpen={modalOpen}
-        setModalOpen={setModalOpen}
-        title="Email Verification Required"
-      >
-        {/* Modal content */}
-        <div className="px-5 pt-4 pb-1">
-          <div className="text-sm">
-            <div className="space-y-2">
-              <p>
-                To have access to the features, please verify you email by
-                clicking the verification link sent
-              </p>
-            </div>
-          </div>
-        </div>
-        {/* Modal footer */}
-        <div className="px-5 py-4">
-          <div className="flex flex-wrap justify-end space-x-2">
-            <button
-              className="btn-sm bg-indigo-500 hover:bg-indigo-600 text-white cursor-pointer disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-none mt-auto"
-              disabled={loading}
-              onClick={() => resendEmailVerification()}
-            >
-              {!loading && "Re-Send Verification Email"}
-              {loading && (
-                <div className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin w-4 h-4 fill-current shrink-0"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M8 16a7.928 7.928 0 01-3.428-.77l.857-1.807A6.006 6.006 0 0014 8c0-3.309-2.691-6-6-6a6.006 6.006 0 00-5.422 8.572l-1.806.859A7.929 7.929 0 010 8c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z" />
-                  </svg>
-                  <span className="ml-2">Loading</span>
-                </div>
-              )}
-            </button>
-          </div>
-        </div>
-      </ModalBasic>
       <Sidebar sidebarOpen={sidebarState} setSidebarOpen={setSidebarOpen} />
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
         <Header sidebarOpen={sidebarState} setSidebarOpen={setSidebarOpen} />

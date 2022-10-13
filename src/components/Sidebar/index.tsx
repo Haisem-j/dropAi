@@ -26,11 +26,14 @@ import SidebarLinks from "./SidebarLinks";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import { isMobile } from "react-device-detect";
 import LogoColor from "../../logos/png/logo-no-background.png";
+import { UserContext } from "../../context/UserContext";
 interface SidebarProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 }
 const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
+  const user = React.useContext(UserContext);
+
   const location = useLocation();
   const { pathname } = location;
 
@@ -262,13 +265,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </span>
             </h3>
             <ul className="mt-3">
-              <li
-                className={`px-2 py-1 rounded-sm mb-2 last:mb-0 bg-red-500 hover:bg-red-600 text-white text-center text-sm font-semibold cursor-pointer`}
-              >
-                <NavLink end to={PLANS_PANEL}>
-                  UPGRADE
-                </NavLink>
-              </li>
+              {user?.getPlanType() === "Free" && (
+                <li
+                  className={`px-2 py-1 rounded-sm mb-2 last:mb-0 bg-red-500 hover:bg-red-600 text-white text-center text-sm font-semibold cursor-pointer`}
+                >
+                  <NavLink end to={PLANS_PANEL}>
+                    UPGRADE
+                  </NavLink>
+                </li>
+              )}
               <SidebarLinks
                 title="Account Settings"
                 path={ACCOUNT_PANEL}

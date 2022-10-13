@@ -11,7 +11,7 @@ export interface AuthProps {
 }
 
 export interface UserProps {
-  getTokens: () => number | undefined;
+  getTokens: () => string | number | undefined;
   checkTokenAvailablity: (costPerRequest: number) => boolean | undefined;
   updateUserTokens: (tokensUsed: number) => Promise<void>;
   getPlanType: () => "Free" | "Standard" | "Unlimited" | undefined;
@@ -24,6 +24,7 @@ export interface DropAiUser {
   planType: "Free" | "Standard" | "Unlimited";
   numberOfRequests: number;
   paymentId?: string;
+  endOfCycle?: string;
 }
 
 export interface BillingInfo {
