@@ -31,7 +31,7 @@ const AccountSettings = () => {
       <div className="mb-3">
         {accounCanceled && (
           <WarningBanner hideBanner={handleBanner}>
-            Account will switch to free tier at{" "}
+            Account will switch to free tier on{" "}
             {moment
               .unix(Number(user?.user?.endOfCycle))
               .format("MMMM Do, YYYY")}
